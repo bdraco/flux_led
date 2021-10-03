@@ -17,15 +17,15 @@ class TestLight(unittest.TestCase):
             calls += 1
             if calls == 1:
                 self.assertEqual(expected, 2)
-                return bytearray(b'\x81D')
+                return bytearray(b'\x81E')
             if calls == 2:
-                self.assertEqual(expected, 14)
-                return bytearray(b'\x81E#a!\x10g\xffh\x00\x04\x00\xf0<')
+                self.assertEqual(expected, 12)
+                return bytearray(b'#a!\x10g\xffh\x00\x04\x00\xf0<')
 
         mock_read.side_effect = read_data
         light = flux_led.WifiLedBulb("192.168.1.166")
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 2)
+        self.assertEqual(mock_send.call_count, 1)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'\x81\x8a\x8b'))
@@ -51,10 +51,10 @@ class TestLight(unittest.TestCase):
             calls += 1
             if calls == 1:
                 self.assertEqual(expected, 2)
-                return bytearray(b'\x81D')
+                return bytearray(b'\x81E')
             if calls == 2:
-                self.assertEqual(expected, 14)
-                return bytearray(b'\x81E#a!\x10g\xffh\x00\x04\x00\xf0<')
+                self.assertEqual(expected, 12)
+                return bytearray(b'#a!\x10g\xffh\x00\x04\x00\xf0<')
             if calls == 3:
                 self.assertEqual(expected, 14)
                 return bytearray(b'\x81E#a!\x10\x01\x19P\x00\x04\x00\xf0\xd8')
@@ -62,7 +62,7 @@ class TestLight(unittest.TestCase):
         mock_read.side_effect = read_data
         light = flux_led.WifiLedBulb("192.168.1.164")
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 2) 
+        self.assertEqual(mock_send.call_count, 1) 
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'\x81\x8a\x8b'))
@@ -70,7 +70,7 @@ class TestLight(unittest.TestCase):
 
         light.setRgb(1, 25, 80)
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 3)
+        self.assertEqual(mock_send.call_count, 2)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'1\x01\x19P\x00\xf0\x0f'))
@@ -78,7 +78,7 @@ class TestLight(unittest.TestCase):
 
         light.update_state()
         self.assertEqual(mock_read.call_count, 3)
-        self.assertEqual(mock_send.call_count, 4)
+        self.assertEqual(mock_send.call_count, 3)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'\x81\x8a\x8b'))
@@ -105,8 +105,8 @@ class TestLight(unittest.TestCase):
                 self.assertEqual(expected, 2)
                 return bytearray(b'\x81E')
             if calls == 2:
-                self.assertEqual(expected, 14)
-                return bytearray(b'\x81E#a!\x10\x00\x00\x00\xa6\x04\x00\x0f3')
+                self.assertEqual(expected, 12)
+                return bytearray(b'#a!\x10\x00\x00\x00\xa6\x04\x00\x0f3')
             if calls == 3:
                 self.assertEqual(expected, 14)
                 return bytearray(b'\x81E$a!\x10\x00\x00\x00\xa6\x04\x00\x0f4')
@@ -121,8 +121,8 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.brightness, 166)
         self.assertEqual(light.getRgb(), (255, 255, 255))
         self.assertEqual(light.rgbwcapable, False)
-        self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 2)
+        self.assertEqual(mock_read.call_count, 1)
+        self.assertEqual(mock_send.call_count, 1)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'\x81\x8a\x8b'))
@@ -130,7 +130,7 @@ class TestLight(unittest.TestCase):
 
         light.turnOff()
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 3)
+        self.assertEqual(mock_send.call_count, 2)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'q$\x0f'))
@@ -138,7 +138,7 @@ class TestLight(unittest.TestCase):
 
         light.update_state()
         self.assertEqual(mock_read.call_count, 3)
-        self.assertEqual(mock_send.call_count, 4)
+        self.assertEqual(mock_send.call_count, 3)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'\x81\x8a\x8b'))
@@ -166,8 +166,8 @@ class TestLight(unittest.TestCase):
                 self.assertEqual(expected, 2)
                 return bytearray(b'\x81E')
             if calls == 2:
-                self.assertEqual(expected, 14)
-                return bytearray(b'\x81E#a!\x10\xb6\x00\x98\x00\x04\x00\xf0\xbc')
+                self.assertEqual(expected, 12)
+                return bytearray(b'#a!\x10\xb6\x00\x98\x00\x04\x00\xf0\xbc')
             if calls == 3:
                 self.assertEqual(expected, 14)
                 return bytearray(b'\x81E#a!\x10\x00\x00\x00\x19\x04\x00\x0f\xa6')
@@ -230,8 +230,8 @@ class TestLight(unittest.TestCase):
                 self.assertEqual(expected, 2)
                 return bytearray(b'\x81\x97')
             if calls == 2:
-                self.assertEqual(expected, 14)
-                return bytearray(b'\x81\x97$$\x00\x00\x00\x00\x00\x00\x02\x00\x00b')
+                self.assertEqual(expected, 12)
+                return bytearray(b'$$\x00\x00\x00\x00\x00\x00\x02\x00\x00b')
             if calls == 3:
                 self.assertEqual(expected, 14)
                 return bytearray(b'\x81\x97##\x00\x00\x00\x00\x00\x00\x02\x00\x00`')
@@ -239,7 +239,7 @@ class TestLight(unittest.TestCase):
         mock_read.side_effect = read_data
         switch = flux_led.WifiLedBulb("192.168.1.164")
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 2)
+        self.assertEqual(mock_send.call_count, 1)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'\x81\x8a\x8b'))
@@ -282,8 +282,8 @@ class TestLight(unittest.TestCase):
                 self.assertEqual(expected, 2)
                 return bytearray(b'\x81E')
             if calls == 2:
-                self.assertEqual(expected, 14)
-                return bytearray(b'\x81E$a!\x10\xff[\xd4\x00\x04\x00\xf0\x9d')
+                self.assertEqual(expected, 12)
+                return bytearray(b'$a!\x10\xff[\xd4\x00\x04\x00\xf0\x9d')
             if calls == 3:
                 self.assertEqual(expected, 14)
                 return bytearray(b'\x81E#a!\x10\x03M\xf7\x00\x04\x00\xf0\xb5')
@@ -291,7 +291,7 @@ class TestLight(unittest.TestCase):
         mock_read.side_effect = read_data
         light = flux_led.WifiLedBulb("192.168.1.164")
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 2)
+        self.assertEqual(mock_send.call_count, 1)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'\x81\x8a\x8b'))
@@ -307,7 +307,7 @@ class TestLight(unittest.TestCase):
 
         light.turnOn()
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 3)
+        self.assertEqual(mock_send.call_count, 2)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'q#\x0f'))
@@ -321,8 +321,8 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.getRgb(), (255, 91, 212))
 
         light.setRgb(1, 25, 80, brightness=247)
-        self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 4)
+        self.assertEqual(mock_read.call_count, 3)
+        self.assertEqual(mock_send.call_count, 3)
         self.assertEqual(
             mock_send.call_args,
             mock.call(bytearray(b'1\x03M\xf7\x00\xf0\x0f'))
@@ -360,10 +360,10 @@ class TestLight(unittest.TestCase):
             calls += 1
             if calls == 1:
                 self.assertEqual(expected, 2)
-                return bytearray(b'\x81D')
+                return bytearray(b'\x81\x25')
             if calls == 2:
-                self.assertEqual(expected, 14)
-                return bytearray(b'\x81\x25\x23\x61\x21\x10\xb6\x00\x98\x00\x04\x00\xf0\xbc')
+                self.assertEqual(expected, 12)
+                return bytearray(b'\x23\x61\x21\x10\xb6\x00\x98\x00\x04\x00\xf0\xbc')
             if calls == 3:
                 self.assertEqual(expected, 14)
                 return bytearray(b'\x81\x25\x23\x61\x21\x10\xb6\x00\x98\x19\x04\x25\x0f\xa6')
@@ -427,8 +427,8 @@ class TestLight(unittest.TestCase):
                 self.assertEqual(expected, 2)
                 return bytearray(b'\f\x01')
             if calls == 3:
-                self.assertEqual(expected, 11)
-                return bytearray(b'f\x01#A!\x08\xff\x80*\x01\x99')
+                self.assertEqual(expected, 9)
+                return bytearray(b'#A!\x08\xff\x80*\x01\x99')
             if calls == 4:
                 self.assertEqual(expected, 11)
                 return bytearray(b'f\x01#A!\x08\x01\x19P\x01\x99')

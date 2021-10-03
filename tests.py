@@ -107,7 +107,13 @@ class TestLight(unittest.TestCase):
             if calls == 2:
                 self.assertEqual(expected, 12)
                 return bytearray(b'#a!\x10\x00\x00\x00\xa6\x04\x00\x0f3')
-            if calls == 3:
+            if calls == 3: # turn off response
+                self.assertEqual(expected, 4)
+                return bytearray(b'\x0fq#\xa3')     
+            if calls == 4: # state update sent after turn off response
+                self.assertEqual(expected, 14)
+                return bytearray(b'\x81E$a!\x10\x00\x00\x00\xa6\x04\x00\x0f4')                          
+            if calls == 5:
                 self.assertEqual(expected, 14)
                 return bytearray(b'\x81E$a!\x10\x00\x00\x00\xa6\x04\x00\x0f4')
 
@@ -121,7 +127,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.brightness, 166)
         self.assertEqual(light.getRgb(), (255, 255, 255))
         self.assertEqual(light.rgbwcapable, False)
-        self.assertEqual(mock_read.call_count, 1)
+        self.assertEqual(mock_read.call_count, 2)
         self.assertEqual(mock_send.call_count, 1)
         self.assertEqual(
             mock_send.call_args,
@@ -129,7 +135,7 @@ class TestLight(unittest.TestCase):
         )
 
         light.turnOff()
-        self.assertEqual(mock_read.call_count, 2)
+        self.assertEqual(mock_read.call_count, 4)
         self.assertEqual(mock_send.call_count, 2)
         self.assertEqual(
             mock_send.call_args,
@@ -137,7 +143,7 @@ class TestLight(unittest.TestCase):
         )
 
         light.update_state()
-        self.assertEqual(mock_read.call_count, 3)
+        self.assertEqual(mock_read.call_count, 5)
         self.assertEqual(mock_send.call_count, 3)
         self.assertEqual(
             mock_send.call_args,

@@ -1164,7 +1164,7 @@ class WifiLedBulb:
         begin = time.monotonic()
         while remaining > 0:
             timeout_left = self.timeout - time.monotonic() - begin
-            if not timeout_left:
+            if timeout_left <= 0:
                 break
             try:
                 self._socket.setblocking(0)

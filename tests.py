@@ -232,7 +232,13 @@ class TestLight(unittest.TestCase):
             if calls == 2:
                 self.assertEqual(expected, 12)
                 return bytearray(b'$$\x00\x00\x00\x00\x00\x00\x02\x00\x00b')
-            if calls == 3:
+            if calls == 3: # turn on response
+                self.assertEqual(expected, 4)
+                return bytearray(b'\x0fq#\xa3')
+            if calls == 4: # test update send after turn on
+                self.assertEqual(expected, 14)
+                return bytearray(b'\x81\x97##\x00\x00\x00\x00\x00\x00\x02\x00\x00`')
+            if calls == 5:
                 self.assertEqual(expected, 14)
                 return bytearray(b'\x81\x97##\x00\x00\x00\x00\x00\x00\x02\x00\x00`')
 
@@ -256,12 +262,12 @@ class TestLight(unittest.TestCase):
             mock_send.call_args,
             mock.call(bytearray(b'q#\x0f'))
         )
-        self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 3)
+        self.assertEqual(mock_read.call_count, 4)
+        self.assertEqual(mock_send.call_count, 2)
 
         switch.update_state()
-        self.assertEqual(mock_read.call_count, 3)
-        self.assertEqual(mock_send.call_count, 4)
+        self.assertEqual(mock_read.call_count, 5)
+        self.assertEqual(mock_send.call_count, 3)
 
 
         self.assertEqual(switch.__str__(), 'ON  [Switch raw state: 129,151,35,35,0,0,0,0,0,0,2,0,0,96,]')

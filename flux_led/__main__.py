@@ -614,27 +614,23 @@ class WifiLedBulb:
         except socket.error:
             pass
 
-    def _determineMode(self, ww_level, pattern_code, mode_code):
+    def _determineMode(self, ww_level, pattern_code, pattern_mode, color_mode):
         mode = "unknown"
         if self.device_type == DeviceType.Switch:
             return "switch"
         if pattern_code == 0x61:
-            if mode_code == 0x01:
-                mode = "DIM"
-            elif mode_code == 0x02:
-                mode = "CCT"
-            elif mode_code == 0x03:
-                mode = "RGB"
-            elif mode_code == 0x04:
-                mode = "RGBW"
-            elif mode_code == 0x05 or mode_code == 0x17:
-                mode = "RGBWW"
+            if color_mode == 0x00:
+                return "RGBWW"
+            if color_mode == 0xF0:
+                return "RGB"
+            if color_mode == 0x0F:
+                return "CCT"
             elif self.rgbwcapable:
-                mode = "color"
+                return "color"
             elif ww_level != 0:
-                mode = "ww"
+                return "ww"
             else:
-                mode = "color"
+                return "color"
         elif pattern_code == 0x60:
             mode = "custom"
         elif pattern_code == 0x62:
@@ -713,7 +709,7 @@ class WifiLedBulb:
         #     |  |  |  |  |  |  |  green
         #     |  |  |  |  |  |  red
         #     |  |  |  |  |  speed: 0f = highest f0 is lowest
-        #     |  |  |  |  <don't know yet>
+        #     |  |  |  |  pattern mode (1: 7 colors, 2: red gradual change, 3: green gradual change...)
         #     |  |  |  preset pattern
         #     |  |  off(24)/on(23)
         #     |  type
@@ -733,7 +729,7 @@ class WifiLedBulb:
         #     |  |  |  |  |  |  |  green  0x00 to 0xFF
         #     |  |  |  |  |  |  red 0x00 to 0xFF
         #     |  |  |  |  |  speed: 0x01 = highest 0x1f is lowest
-        #     |  |  |  |  Mode WW(01), WW+CW(02), RGB(03), RGBW(04), RGBWW(05)
+        #     |  |  |  |  pattern mode (1: 7 colors, 2: red gradual change, 3: green gradual change...)
         #     |  |  |  preset pattern
         #     |  |  off(24)/on(23)
         #     |  type
@@ -763,8 +759,10 @@ class WifiLedBulb:
             self._use_csum = False
 
         pattern = rx[3]
+        pattern_mode = rx[4]
+        color_mode = 0xF0 if self.protocol == "LEDENET_ORIGINAL" else rx[12]
         ww_level = rx[9]
-        mode = self._determineMode(ww_level, pattern, rx[4])
+        mode = self._determineMode(ww_level, pattern, pattern_mode, color_mode)
         if mode == "unknown":
             _LOGGER.debug(
                 "%s: Unable to determine mode from raw state: %s",

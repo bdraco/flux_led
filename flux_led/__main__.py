@@ -713,7 +713,7 @@ class WifiLedBulb:
 
     def update_state(self, retry=2):
         rx = self.query_state(retry)
-        if self.process_state_response(rx):
+        if rx and self.process_state_response(rx):
             return
         if retry < 1:
             return

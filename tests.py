@@ -459,17 +459,17 @@ class TestLight(unittest.TestCase):
 
         mock_read.side_effect = read_data
         light = flux_led.WifiLedBulb("192.168.1.164")
-        self.assertEqual(mock_read.call_count, 3)
+        self.assertEqual(mock_read.call_count, 4)
         self.assertEqual(mock_send.call_count, 3)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\xef\x01w")))
 
         light.setRgb(1, 25, 80)
-        self.assertEqual(mock_read.call_count, 3)
+        self.assertEqual(mock_read.call_count, 4)
         self.assertEqual(mock_send.call_count, 4)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"V\x01\x19P\xaa")))
 
         light.update_state()
-        self.assertEqual(mock_read.call_count, 4)
+        self.assertEqual(mock_read.call_count, 5)
         self.assertEqual(mock_send.call_count, 5)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\xef\x01w")))
 

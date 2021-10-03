@@ -534,7 +534,7 @@ class LedTimer:
 
 
 class WifiLedBulb:
-    def __init__(self, ipaddr, port=5577, timeout=5):
+    def __init__(self, ipaddr, port=5577, timeout=6):
         self.ipaddr = ipaddr
         self.port = port
         self.timeout = timeout
@@ -728,7 +728,9 @@ class WifiLedBulb:
         expected_first_byte = 0x66 if self.protocol == "LEDENET_ORIGINAL" else 0x81
         if rx[0] != expected_first_byte:
             _LOGGER.warning(
-                "%s: Recieved invalid response: %s", utils.raw_state_to_dec(rx)
+                "%s: Recieved invalid response: %s",
+                self.ipaddr,
+                utils.raw_state_to_dec(rx),
             )
             return False
         # typical response:
@@ -1174,7 +1176,12 @@ class WifiLedBulb:
                 break
             try:
                 self._socket.setblocking(0)
-                select.select([self._socket], [], [], timeout_left)
+                read_ready, _, _ = select.select([self._socket], [], [], timeout_left)
+                if not read_ready:
+                    _LOGGER.debug(
+                        "%s: timed out reading %d bytes", self.ipaddr, expected
+                    )
+                    break
                 chunk = self._socket.recv(remaining)
                 _LOGGER.debug(
                     "%s <= %s (%d)",

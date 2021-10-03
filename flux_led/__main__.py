@@ -694,6 +694,7 @@ class WifiLedBulb:
 
         try:
             with self._lock:
+                self.connect()
                 self._send_msg(msg)
                 rx = self._read_msg(self._query_len)
         except socket.error as ex:

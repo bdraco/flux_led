@@ -452,8 +452,23 @@ class TestLight(unittest.TestCase):
                 return bytearray(b"f\x01#A!\x08\x01\x19P\x01\x99")
             if calls == 5:
                 self.assertEqual(expected, 11)
+                return bytearray(b"f\x01#A!\x08\x01\x19P\x01\x99")
+            if calls == 6:  # ready turn off response
+                self.assertEqual(expected, 4)
+                return bytearray(b"\x0fq#\xa3")
+            if calls == 7:  # ready state update after turn off response
+                self.assertEqual(expected, 11)
                 return bytearray(b"f\x01$A!\x08\x01\x19P\x01\x99")
-            if calls == 6:
+            if calls == 8:
+                self.assertEqual(expected, 11)
+                return bytearray(b"f\x01$A!\x08\x01\x19P\x01\x99")
+            if calls == 9:  # ready turn on response
+                self.assertEqual(expected, 4)
+                return bytearray(b"\x0fq#\xa3")
+            if calls == 10:  # ready state update after turn on response
+                self.assertEqual(expected, 11)
+                return bytearray(b"f\x01#A!\x08\x01\x19P\x01\x99")
+            if calls == 11:
                 self.assertEqual(expected, 11)
                 return bytearray(b"f\x01#A!\x08\x01\x19P\x01\x99")
 
@@ -485,12 +500,12 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.getRgb(), (1, 25, 80))
 
         light.turnOff()
-        self.assertEqual(mock_read.call_count, 4)
+        self.assertEqual(mock_read.call_count, 7)
         self.assertEqual(mock_send.call_count, 6)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\xcc$3")))
 
         light.update_state()
-        self.assertEqual(mock_read.call_count, 5)
+        self.assertEqual(mock_read.call_count, 8)
         self.assertEqual(mock_send.call_count, 7)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\xef\x01w")))
 
@@ -506,12 +521,12 @@ class TestLight(unittest.TestCase):
         self.assertEqual(light.getRgb(), (1, 25, 80))
 
         light.turnOn()
-        self.assertEqual(mock_read.call_count, 5)
+        self.assertEqual(mock_read.call_count, 10)
         self.assertEqual(mock_send.call_count, 8)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\xcc#3")))
 
         light.update_state()
-        self.assertEqual(mock_read.call_count, 6)
+        self.assertEqual(mock_read.call_count, 11)
         self.assertEqual(mock_send.call_count, 9)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\xef\x01w")))
 

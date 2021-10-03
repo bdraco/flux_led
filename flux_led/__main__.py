@@ -1177,7 +1177,7 @@ class WifiLedBulb:
                     len(chunk),
                 )
                 if chunk:
-                    begin = time.time()
+                    begin = time.monotonic()
                 remaining -= len(chunk)
                 rx.extend(chunk)
             except socket.error as ex:

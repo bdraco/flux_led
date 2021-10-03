@@ -178,7 +178,7 @@ class TestLight(unittest.TestCase):
         mock_read.side_effect = read_data
         light = flux_led.WifiLedBulb("192.168.1.164")
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 2)
+        self.assertEqual(mock_send.call_count, 1)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\x81\x8a\x8b")))
 
         self.assertEqual(
@@ -196,14 +196,14 @@ class TestLight(unittest.TestCase):
 
         light.setWarmWhite255(25)
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 3)
+        self.assertEqual(mock_send.call_count, 2)
         self.assertEqual(
             mock_send.call_args, mock.call(bytearray(b"1\x00\x00\x00\x19\x0f\x0f"))
         )
 
         light.update_state()
         self.assertEqual(mock_read.call_count, 3)
-        self.assertEqual(mock_send.call_count, 4)
+        self.assertEqual(mock_send.call_count, 3)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\x81\x8a\x8b")))
 
         self.assertEqual(
@@ -389,7 +389,7 @@ class TestLight(unittest.TestCase):
         mock_read.side_effect = read_data
         light = flux_led.WifiLedBulb("192.168.1.164")
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 2)
+        self.assertEqual(mock_send.call_count, 1)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\x81\x8a\x8b")))
 
         self.assertEqual(light.protocol, "LEDENET")
@@ -406,14 +406,14 @@ class TestLight(unittest.TestCase):
 
         light.setWarmWhite255(25)
         self.assertEqual(mock_read.call_count, 2)
-        self.assertEqual(mock_send.call_count, 3)
+        self.assertEqual(mock_send.call_count, 2)
         self.assertEqual(
             mock_send.call_args, mock.call(bytearray(b"1\x00\x00\x00\x19\x19\x0f\x0f"))
         )
 
         light.update_state()
         self.assertEqual(mock_read.call_count, 3)
-        self.assertEqual(mock_send.call_count, 4)
+        self.assertEqual(mock_send.call_count, 3)
         self.assertEqual(mock_send.call_args, mock.call(bytearray(b"\x81\x8a\x8b")))
 
         self.assertEqual(light.protocol, "LEDENET")

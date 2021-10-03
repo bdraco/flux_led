@@ -1168,7 +1168,7 @@ class WifiLedBulb:
         rx = bytearray()
         begin = time.monotonic()
         while remaining > 0:
-            timeout_left = self.timeout - time.monotonic() - begin
+            timeout_left = self.timeout - (time.monotonic() - begin)
             if timeout_left <= 0:
                 break
             try:

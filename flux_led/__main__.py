@@ -661,6 +661,11 @@ class WifiLedBulb:
                 rx += self._read_msg(12)
                 self._query_len = 14
                 return rx
+
+        # We just sent a garage query which the old procotol
+        # cannot process, recycle the connection
+        self.connect()
+        with self._lock:
             # if no response from default received, next try the original protocol
             self._send_msg(bytearray([0xEF, 0x01, 0x77]))
             rx = self._read_msg(2)

@@ -658,18 +658,18 @@ class WifiLedBulb:
             rx = self._read_msg(2)
             # if any response is recieved, use the default protocol
             if len(rx) == 2:
-                self._read_msg(12)
+                rx += self._read_msg(12)
                 self._query_len = 14
-                return
+                return rx
             # if no response from default received, next try the original protocol
             self._send_msg(bytearray([0xEF, 0x01, 0x77]))
             rx = self._read_msg(2)
             if rx[1] == 0x01:
                 self.protocol = "LEDENET_ORIGINAL"
                 self._use_csum = False
-                self._read_msg(9)
+                rx += self._read_msg(9)
                 self._query_len = 11
-                return
+                return rx
             else:
                 self._use_csum = True
         if rx == None and retry > 0:
@@ -678,7 +678,7 @@ class WifiLedBulb:
 
     def query_state(self, retry=2, led_type=None):
         if self._query_len == 0:
-            self._determine_query_len()
+            return self._determine_query_len()
 
         # default value
         msg = bytearray([0x81, 0x8A, 0x8B])

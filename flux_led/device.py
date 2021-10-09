@@ -131,13 +131,14 @@ class LEDENETDevice:
     @property
     def color_modes(self):
         """The available color modes."""
-        model_db_entry = MODEL_MAP.get(self.model_num)
-        if not model_db_entry:
-            # Default mode is RGB
-            return BASE_MODE_MAP.get(self.raw_state.mode & 0x0F, {DEFAULT_MODE})
-        return model_db_entry.mode_to_color_mode.get(
-            self.raw_state.mode, model_db_entry.color_modes
-        )
+        model_num = self.model_num
+        mode = self.raw_state.mode
+        detected_modes = BASE_MODE_MAP.get(mode & 0x0F)
+        if model_num not in MODEL_MAP:
+            return detected_modes or {DEFAULT_MODE}  # Default mode is RGB
+        entry = MODEL_MAP[model_num]
+        mode_to_color_mode = entry.mode_to_color_mode
+        return mode_to_color_mode.get(mode, detected_modes or entry.color_modes)
 
     @property
     def color_mode(self):
@@ -276,7 +277,7 @@ class LEDENETDevice:
                         self._protocol = ProtocolLEDENET9Byte()
                     else:
                         self._protocol = protocol
-                return full_msg
+                    return full_msg
         raise Exception("Cannot determine protocol")
 
     @_socket_retry(attempts=2)

@@ -89,7 +89,7 @@ MODELS = [
         description="Floor Lamp",
         always_writes_white_and_colors=False,  # Formerly rgbwprotocol
         nine_byte_read_protocol=True,
-        mode_to_color_mode={},
+        mode_to_color_mode={0x01: COLOR_MODES_RGB_CCT},
         color_modes=COLOR_MODES_RGB_CCT,
     ),
     LEDENETModel(
@@ -116,7 +116,7 @@ MODELS = [
         description="Smart Bulbs",
         always_writes_white_and_colors=False,  # Formerly rgbwprotocol
         nine_byte_read_protocol=True,
-        mode_to_color_mode={},
+        mode_to_color_mode={0x01: COLOR_MODES_RGB_CCT},
         color_modes=COLOR_MODES_RGB_CCT,
     ),
     LEDENETModel(

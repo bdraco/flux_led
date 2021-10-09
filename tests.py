@@ -37,7 +37,7 @@ class TestLight(unittest.TestCase):
                 return bytearray(b"\x81E")
             if calls == 2:
                 self.assertEqual(expected, 12)
-                return bytearray(b"#a!\x10g\xffh\x00\x04\x00\xf0\x3d")
+                return bytearray(b"#a&\x10g\xffh\x00\x04\x00\xf0\x42")
             raise Exception
 
         mock_read.side_effect = read_data
@@ -50,7 +50,7 @@ class TestLight(unittest.TestCase):
 
         self.assertEqual(
             light.__str__(),
-            "ON  [Color: (103, 255, 104) Brightness: 255 raw state: 129,69,35,97,33,16,103,255,104,0,4,0,240,61,]",
+            "ON  [Color: (103, 255, 104) Brightness: 255 raw state: 129,69,35,97,38,16,103,255,104,0,4,0,240,66,]",
         )
         self.assertEqual(light.protocol, PROTOCOL_LEDENET_8BYTE)
         self.assertEqual(light.is_on, True)

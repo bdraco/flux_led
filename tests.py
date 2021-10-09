@@ -75,10 +75,10 @@ class TestLight(unittest.TestCase):
                 return bytearray(b"\x81E")
             if calls == 2:
                 self.assertEqual(expected, 12)
-                return bytearray(b"#a!\x10g\xffh\x00\x04\x00\xf0\x3d")
+                return bytearray(b"#a&\x10g\xffh\x00\x04\x00\xf0\x42")
             if calls == 3:
                 self.assertEqual(expected, 14)
-                return bytearray(b"\x81E#a!\x10\x01\x19P\x00\x04\x00\xf0\xd9")
+                return bytearray(b"\x81E#a&\x10\x01\x19P\x00\x04\x00\xf0\xde")
 
         mock_read.side_effect = read_data
         light = flux_led.WifiLedBulb("192.168.1.164")
@@ -104,7 +104,7 @@ class TestLight(unittest.TestCase):
 
         self.assertEqual(
             light.__str__(),
-            "ON  [Color: (1, 25, 80) Brightness: 80 raw state: 129,69,35,97,33,16,1,25,80,0,4,0,240,217,]",
+            "ON  [Color: (1, 25, 80) Brightness: 80 raw state: 129,69,35,97,38,16,1,25,80,0,4,0,240,222,]",
         )
         self.assertEqual(light.protocol, PROTOCOL_LEDENET_8BYTE)
         self.assertEqual(light.is_on, True)

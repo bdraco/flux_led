@@ -116,6 +116,16 @@ class LEDENETDevice:
         )
 
     @property
+    def min_temp(self):
+        """Returns the minimum color temp in kelvin."""
+        return MIN_TEMP
+
+    @property
+    def max_temp(self):
+        """Returns the maximum color temp in kelvin."""
+        return MAX_TEMP
+
+    @property
     def _rgbwwprotocol(self):
         """Device that uses the 9-byte protocol."""
         return self._uses_9byte_protocol(self.model_num)
@@ -146,16 +156,22 @@ class LEDENETDevice:
         model_db_entry = MODEL_MAP.get(self.model_num)
         if not model_db_entry:
             # Default mode is RGB
-            return BASE_MODE_MAP.get(self.raw_state.mode & 0x0F, {DEFAULT_MODE})
-        return model_db_entry.mode_to_color_mode.get(
-            self.raw_state.mode, model_db_entry.color_modes
-        )
+            color_modes = BASE_MODE_MAP.get(self.raw_state.mode & 0x0F, {DEFAULT_MODE})
+        else:
+            color_modes = model_db_entry.mode_to_color_mode.get(
+                self.raw_state.mode, model_db_entry.color_modes
+            )
+        if COLOR_MODE_RGBWW in color_modes and COLOR_MODE_CCT not in color_modes:
+            # We support CCT mode if the device supports RGBWW
+            return {COLOR_MODE_CCT, *color_modes}
+        return color_modes
 
     @property
     def color_mode(self):
         """The current color mode."""
         color_modes = self.color_modes
         if COLOR_MODE_RGBWW in color_modes and not self.color_active:
+            # We support CCT mode if the device supports RGBWW
             return COLOR_MODE_CCT
         if (
             color_modes == COLOR_MODES_RGB_CCT

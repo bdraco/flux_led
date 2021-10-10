@@ -116,6 +116,11 @@ class LEDENETDevice:
         )
 
     @property
+    def color_temp(self):
+        """Return the current color temp in kelvin."""
+        return (self.getWhiteTemperature())[0]
+
+    @property
     def min_temp(self):
         """Returns the minimum color temp in kelvin."""
         return MIN_TEMP
@@ -153,6 +158,18 @@ class LEDENETDevice:
     @property
     def color_modes(self):
         """The available color modes."""
+        color_modes = self._internal_color_modes
+        # We support CCT mode if the device supports RGBWW
+        # but we do not add it to internal color modes as
+        # we need to distingush between devices that are RGB/CCT
+        # and ones that are RGB&CCT
+        if COLOR_MODE_RGBWW in color_modes and COLOR_MODE_CCT not in color_modes:
+            return {COLOR_MODE_CCT, *color_modes}
+        return color_modes
+
+    @property
+    def _internal_color_modes(self):
+        """The internal available color modes."""
         model_db_entry = MODEL_MAP.get(self.model_num)
         if not model_db_entry:
             # Default mode is RGB
@@ -169,7 +186,7 @@ class LEDENETDevice:
     @property
     def color_mode(self):
         """The current color mode."""
-        color_modes = self.color_modes
+        color_modes = self._internal_color_modes
         if COLOR_MODE_RGBWW in color_modes and not self.color_active:
             # We support CCT mode if the device supports RGBWW
             return COLOR_MODE_CCT

@@ -5,6 +5,24 @@ from abc import abstractmethod
 from collections import namedtuple
 from enum import Enum
 
+from .const import (
+    STATE_BLUE,
+    STATE_CHECK_SUM,
+    STATE_COLOR_MODE,
+    STATE_COOL_WHITE,
+    STATE_GREEN,
+    STATE_HEAD,
+    STATE_MODE,
+    STATE_MODEL_NUM,
+    STATE_POWER_STATE,
+    STATE_PRESET_PATTERN,
+    STATE_RED,
+    STATE_SPEED,
+    STATE_VERSION_NUMBER,
+    STATE_WARM_WHITE,
+)
+from .utils import utils
+
 _LOGGER = logging.getLogger(__name__)
 
 # Protocol names
@@ -12,34 +30,36 @@ PROTOCOL_LEDENET_ORIGINAL = "LEDENET_ORIGINAL"
 PROTOCOL_LEDENET_9BYTE = "LEDENET"
 PROTOCOL_LEDENET_8BYTE = "LEDENET_8BYTE"  # Previously was called None
 
+from .const import TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE
+
+TRANSITION_BYTES = {
+    TRANSITION_JUMP: 0x3B,
+    TRANSITION_STROBE: 0x3C,
+    TRANSITION_GRADUAL: 0x3A,
+}
+
 LEDENET_ORIGINAL_STATE_RESPONSE_LEN = 11
 LEDENET_STATE_RESPONSE_LEN = 14
 
 LEDENET_BASE_STATE = [
-    "head",
-    "model_num",
-    "power_state",
-    "preset_pattern",
-    "mode",
-    "speed",
-    "red",
-    "green",
-    "blue",
-    "warm_white",
+    STATE_HEAD,
+    STATE_MODEL_NUM,
+    STATE_POWER_STATE,
+    STATE_PRESET_PATTERN,
+    STATE_MODE,
+    STATE_SPEED,
+    STATE_RED,
+    STATE_GREEN,
+    STATE_BLUE,
+    STATE_WARM_WHITE,
 ]
-
-
-class LevelWriteMode(Enum):
-    ALL = 0x00
-    COLORS = 0xF0
-    WHITES = 0x0F
 
 
 LEDENETOriginalRawState = namedtuple(
     "LEDENETOriginalRawState",
     [
         *LEDENET_BASE_STATE,
-        "check_sum",
+        STATE_CHECK_SUM,
     ],
 )
 # typical response:
@@ -64,10 +84,10 @@ LEDENETRawState = namedtuple(
     "LEDENETRawState",
     [
         *LEDENET_BASE_STATE,
-        "version_number",
-        "cool_white",
-        "color_mode",
-        "check_sum",
+        STATE_VERSION_NUMBER,
+        STATE_COOL_WHITE,
+        STATE_COLOR_MODE,
+        STATE_CHECK_SUM,
     ],
 )
 # response from a 5-channel LEDENET controller:
@@ -121,6 +141,36 @@ class ProtocolBase:
         self, persist, red, green, blue, warm_white, cool_white, color_mask
     ):
         """The bytes to send for a level change request."""
+
+    def construct_preset_pattern(self, pattern, speed):
+        """The bytes to send for a preset pattern."""
+        delay = utils.speedToDelay(speed)
+        return self.construct_message(bytearray([0x61, pattern, delay, 0x0F]))
+
+    def construct_custom_effect(self, rgb_list, speed, transition_type):
+        """The bytes to send for a custom effect."""
+        msg = bytearray()
+        first_color = True
+        for rgb in rgb_list:
+            if first_color:
+                lead_byte = 0x51
+                first_color = False
+            else:
+                lead_byte = 0
+            r, g, b = rgb
+            msg.extend(bytearray([lead_byte, r, g, b]))
+        # pad out empty slots
+        if len(rgb_list) != 16:
+            for i in range(16 - len(rgb_list)):
+                msg.extend(bytearray([0, 1, 2, 3]))
+        msg.append(0x00)
+        msg.append(utils.speedToDelay(speed))
+        msg.append(
+            TRANSITION_BYTES.get(transition_type, TRANSITION_BYTES[TRANSITION_GRADUAL])
+        )  # default to "gradual"
+        msg.append(0xFF)
+        msg.append(0x0F)
+        return self.construct_message(msg)
 
     @property
     @abstractmethod

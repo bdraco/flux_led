@@ -6,18 +6,17 @@ import flux_led
 
 LEDENET_STATE_QUERY = b"\x81\x8a\x8b\x96"
 
-from flux_led.protocol import (
-    PROTOCOL_LEDENET_ORIGINAL,
-    PROTOCOL_LEDENET_9BYTE,
-    PROTOCOL_LEDENET_8BYTE,
-)
-
 from flux_led.const import (
+    COLOR_MODE_CCT,
     COLOR_MODE_DIM,
-    COLOR_MODE_RGBWW,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
-    COLOR_MODE_CCT,
+    COLOR_MODE_RGBWW,
+)
+from flux_led.protocol import (
+    PROTOCOL_LEDENET_8BYTE,
+    PROTOCOL_LEDENET_9BYTE,
+    PROTOCOL_LEDENET_ORIGINAL,
 )
 from flux_led.utils import rgbw_brightness, rgbww_brightness
 
@@ -664,3 +663,123 @@ class TestLight(unittest.TestCase):
         assert rgbw_brightness((255, 255, 255, 255), 128) == (128, 128, 128, 128)
         assert rgbw_brightness((0, 255, 0, 0), 255) == (0, 255, 0, 255)
         assert rgbw_brightness((0, 255, 0, 0), 128) == (0, 255, 0, 0)
+
+    @patch("flux_led.WifiLedBulb._send_msg")
+    @patch("flux_led.WifiLedBulb._read_msg")
+    @patch("flux_led.WifiLedBulb.connect")
+    def test_unknown_model_detection_rgbw_cct(self, mock_connect, mock_read, mock_send):
+        calls = 0
+        model_not_in_db = 222
+
+        def read_data(expected):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                self.assertEqual(expected, 2)
+                return bytearray([129, model_not_in_db])
+            if calls == 2:
+                self.assertEqual(expected, 12)
+                return bytearray(b"$$\x47\x00\x00\x00\x00\x00\x02\x00\x00\xf0")
+
+        mock_read.side_effect = read_data
+        switch = flux_led.WifiLedBulb("192.168.1.164")
+        assert switch.color_modes == {COLOR_MODE_RGB, COLOR_MODE_CCT}
+
+    @patch("flux_led.WifiLedBulb._send_msg")
+    @patch("flux_led.WifiLedBulb._read_msg")
+    @patch("flux_led.WifiLedBulb.connect")
+    def test_unknown_model_detection_rgb_dim(self, mock_connect, mock_read, mock_send):
+        calls = 0
+        model_not_in_db = 222
+
+        def read_data(expected):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                self.assertEqual(expected, 2)
+                return bytearray([129, model_not_in_db])
+            if calls == 2:
+                self.assertEqual(expected, 12)
+                return bytearray(b"$$\x46\x00\x00\x00\x00\x00\x02\x00\x00\xef")
+
+        mock_read.side_effect = read_data
+        switch = flux_led.WifiLedBulb("192.168.1.164")
+        assert switch.color_modes == {COLOR_MODE_RGB, COLOR_MODE_DIM}
+
+    @patch("flux_led.WifiLedBulb._send_msg")
+    @patch("flux_led.WifiLedBulb._read_msg")
+    @patch("flux_led.WifiLedBulb.connect")
+    def test_unknown_model_detection_rgbww(self, mock_connect, mock_read, mock_send):
+        calls = 0
+        model_not_in_db = 222
+
+        def read_data(expected):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                self.assertEqual(expected, 2)
+                return bytearray([129, model_not_in_db])
+            if calls == 2:
+                self.assertEqual(expected, 12)
+                return bytearray(b"$$\x45\x00\x00\x00\x00\x00\x02\x00\x00\xee")
+
+        mock_read.side_effect = read_data
+        switch = flux_led.WifiLedBulb("192.168.1.164")
+        assert switch.color_modes == {COLOR_MODE_RGBWW}
+
+    @patch("flux_led.WifiLedBulb._send_msg")
+    @patch("flux_led.WifiLedBulb._read_msg")
+    @patch("flux_led.WifiLedBulb.connect")
+    def test_unknown_model_detection_rgbw(self, mock_connect, mock_read, mock_send):
+        calls = 0
+        model_not_in_db = 222
+
+        def read_data(expected):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                self.assertEqual(expected, 2)
+                return bytearray([129, model_not_in_db])
+            if calls == 2:
+                self.assertEqual(expected, 12)
+                return bytearray(b"$$\x44\x00\x00\x00\x00\x00\x02\x00\x00\xed")
+
+        mock_read.side_effect = read_data
+        switch = flux_led.WifiLedBulb("192.168.1.164")
+        assert switch.color_modes == {COLOR_MODE_RGBW}
+
+    @patch("flux_led.WifiLedBulb._send_msg")
+    @patch("flux_led.WifiLedBulb._read_msg")
+    @patch("flux_led.WifiLedBulb.connect")
+    def test_single_channel_remapping(self, mock_connect, mock_read, mock_send):
+        calls = 0
+
+        def read_data(expected):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                self.assertEqual(expected, 2)
+                return bytearray(b"\x81\x41")
+            if calls == 2:
+                self.assertEqual(expected, 12)
+                return bytearray(b"#a\x41\x10\xff\x00\x00\x00\x04\x00\xf0\x8a")
+
+        mock_read.side_effect = read_data
+        light = flux_led.WifiLedBulb("192.168.1.164")
+        assert light.color_modes == {COLOR_MODE_DIM}
+
+        self.assertEqual(mock_read.call_count, 2)
+        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(mock_send.call_args, mock.call(bytearray(LEDENET_STATE_QUERY)))
+
+        self.assertEqual(
+            light.__str__(),
+            "ON  [Warm White: 100% raw state: 129,65,35,97,65,16,255,0,0,255,4,0,240,138,]",
+        )
+        self.assertEqual(light.protocol, PROTOCOL_LEDENET_8BYTE)
+        self.assertEqual(light.is_on, True)
+        self.assertEqual(light.mode, "ww")
+        self.assertEqual(light.warm_white, 0)
+        self.assertEqual(light.brightness, 255)
+        self.assertEqual(light.rgbwcapable, False)
+        self.assertEqual(light.device_type, flux_led.DeviceType.Bulb)

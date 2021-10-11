@@ -289,7 +289,7 @@ class LEDENETDevice:
             self._socket = None
 
     def _determineMode(self):
-        pattern_code = self.preset_pattern
+        pattern_code = self.preset_pattern_num
         if self.device_type == DeviceType.Switch:
             return MODE_SWITCH
         if pattern_code in (0x41, 0x61):

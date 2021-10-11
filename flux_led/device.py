@@ -45,6 +45,7 @@ from .models_db import (
     CHANNEL_REMAP,
     MODEL_MAP,
     RGBW_PROTOCOL_MODELS,
+    ADDRESSABLE_PROTOCOL_MODELS,
     USE_9BYTE_PROTOCOL_MODELS,
 )
 from .pattern import PresetPattern
@@ -106,6 +107,11 @@ class LEDENETDevice:
     def rgbwprotocol(self):
         """Devices that don't require a separate rgb/w bit."""
         return self.model_num in RGBW_PROTOCOL_MODELS
+
+    @property
+    def addressable_protocol(self):
+        """Devices that use the addressable protocol."""
+        return self.model_num in ADDRESSABLE_PROTOCOL_MODELS
 
     @property
     def rgbwcapable(self):

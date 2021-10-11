@@ -249,3 +249,6 @@ RGBW_PROTOCOL_MODELS = {
 USE_9BYTE_PROTOCOL_MODELS = {
     model.model_num for model in MODELS if model.nine_byte_read_protocol
 }
+ADDRESSABLE_PROTOCOL_MODELS = {
+    model.model_num for model in MODELS if COLOR_MODE_ADDRESSABLE in model.color_modes
+}

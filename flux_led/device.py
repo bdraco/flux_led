@@ -101,10 +101,7 @@ class LEDENETDevice:
     @property
     def preset_pattern_num(self):
         """Return the preset pattern number."""
-        raw_state = self.raw_state
-        if self.addressable_protocol:
-            return raw_state.preset_pattern << 8 + raw_state.mode
-        return raw_state.preset_pattern
+        return self.raw_state.preset_pattern
 
     @property
     def rgbwprotocol(self):
@@ -292,6 +289,11 @@ class LEDENETDevice:
         pattern_code = self.preset_pattern_num
         if self.device_type == DeviceType.Switch:
             return MODE_SWITCH
+        # For addressable
+        # 0x61 is fixed preset patterns, mode is the pattern number
+        # 0x25 is rbm, mode is the pattern number
+        # 0x24 is multi color, mode is the pattern number
+        # 0x60 is custom aka diy (mode always seem to be 5)
         if pattern_code in (0x41, 0x61):
             if self.color_mode in {COLOR_MODE_DIM, COLOR_MODE_CCT}:
                 return MODE_WW

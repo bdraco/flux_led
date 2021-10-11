@@ -101,7 +101,10 @@ class LEDENETDevice:
     @property
     def preset_pattern_num(self):
         """Return the preset pattern number."""
-        return self.raw_state.preset_pattern
+        raw_state = self.raw_state
+        if self.addressable_protocol:
+            return raw_state.preset_pattern << 8 + raw_state.mode
+        return raw_state.preset_pattern
 
     @property
     def rgbwprotocol(self):
@@ -286,7 +289,7 @@ class LEDENETDevice:
             self._socket = None
 
     def _determineMode(self):
-        pattern_code = self.raw_state.preset_pattern
+        pattern_code = self.preset_pattern
         if self.device_type == DeviceType.Switch:
             return MODE_SWITCH
         if pattern_code in (0x41, 0x61):
@@ -696,8 +699,8 @@ class LEDENETDevice:
             w2_value = int(w2)
 
         write_mode = LevelWriteMode.ALL
-        # rgbwprotocol always overwrite both color & whites
-        if not self.rgbwprotocol:
+        # rgbwprotocol and addressable_protocol always overwrite both color & whites
+        if not self.rgbwprotocol and not self.addressable_protocol:
             if w is None and w2 is None:
                 write_mode = LevelWriteMode.COLORS
             elif r is None and g is None and b is None:

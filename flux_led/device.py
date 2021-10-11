@@ -291,6 +291,15 @@ class LEDENETDevice:
             return MODE_SWITCH
         # For addressable
         # 0x61 is fixed preset patterns, mode is the pattern number
+        # 1 - fixed single color
+        # 2 - single pixel foreground and background color, direction can be changed
+        # 3 - two pixels foreground and background color, direction can be changed
+        # 4 - two pixels foreground and background color faded, direction can be changed
+        # 5 - half and half foreground and background color faded, direction can be changed
+        # 6 - two colors foreground at the end cycles though, direction can be changed
+        # 7 - two colors gradual fade between foreground and background
+        # 8 - two colors blink between foreground and background
+
         # 0x25 is rbm, mode is the pattern number
         # 0x24 is multi color, mode is the pattern number
         # 0x60 is custom aka diy (mode always seem to be 5)

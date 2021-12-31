@@ -75,6 +75,7 @@ class AIOBulbScanner(BulbScanner):
         messages: Optional[List[bytes]],
         address: str,
         timeout: int = 5,
+        reboot: bool = True,
     ) -> None:
         """Send a command and reboot."""
         sock = self._create_socket()
@@ -193,3 +194,18 @@ class AIOBulbScanner(BulbScanner):
     async def async_reboot(self, address: str, timeout: int = 5) -> None:
         """Reboot the device."""
         await self._async_send_commands_and_reboot(None, address, timeout)
+
+    async def async_tasmotize(self, address: str, timeout: int = 120) -> None:
+        """Tasmotize device.
+
+        WARNING: THIS IS IRREVERSABLE!
+        """
+        await self._async_send_commands_and_reboot(
+            [
+                self.VERSION_MESSAGE,
+                "AT+UPURL=http://ota.tasmota.com/tasmota/release/tasmota.bin\r".encode(),
+            ],
+            address,
+            timeout,
+            reboot=False,
+        )

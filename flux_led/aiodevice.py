@@ -12,6 +12,7 @@ from .base_device import (
     DeviceType,
     LEDENETDevice,
 )
+from .models_db import LEDENETChip
 from .const import (
     COLOR_MODE_CCT,
     COLOR_MODE_DIM,
@@ -542,6 +543,17 @@ class AIOWifiLedBulb(LEDENETDevice):
             self._protocol.construct_remote_config(remote_config)
         )
         await self._async_send_msg(self._protocol.construct_query_remote_config())
+
+    async def async_tasmotize(self) -> None:
+        """Install tasmota on ESP based devices.
+
+        WARNING: THIS IS IRREVERSABLE!
+        """
+        hardware = self.hardware
+        if hardware is None or hardware.chip != LEDENETChip.ESP8266:
+            raise ValueError("Only devices with ESP chips can be tasmotized")
+        await AIOBulbScanner().async_tasmotize(self.ipaddr)
+        self._async_stop()
 
     async def _async_device_config_resync(self) -> None:
         await asyncio.sleep(DEVICE_CONFIG_WAIT_SECONDS)

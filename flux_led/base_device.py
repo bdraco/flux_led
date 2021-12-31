@@ -953,7 +953,7 @@ class LEDENETDevice:
     def getSpeed(self) -> int:
         return self.speed
 
-    def _generate_random_levels_change(self) -> Tuple[bytearray, Dict[str, int]]:
+    def _generate_random_levels_change(self) -> Tuple[List[bytearray], Dict[str, int]]:
         """Generate a random levels change."""
         channels = {STATE_WARM_WHITE}
         if COLOR_MODES_RGB.intersection(self.color_modes):
@@ -972,7 +972,7 @@ class LEDENETDevice:
         channels: Dict[str, Optional[int]],
         persist: bool = True,
         brightness: Optional[int] = None,
-    ) -> Tuple[bytearray, Dict[str, int]]:
+    ) -> Tuple[List[bytearray], Dict[str, int]]:
         """Generate the levels change request."""
         channel_map = self.model_data.channel_map
         if channel_map:
@@ -1037,7 +1037,7 @@ class LEDENETDevice:
         )
 
         assert self._protocol is not None
-        msg = self._protocol.construct_levels_change(
+        msgs = self._protocol.construct_levels_change(
             persist, r_value, g_value, b_value, w_value, w2_value, write_mode
         )
         updates = {}
@@ -1046,7 +1046,7 @@ class LEDENETDevice:
             updates.update({"red": r_value, "green": g_value, "blue": b_value})
         if multi_mode or write_mode in WRITE_ALL_WHITES:
             updates.update({"warm_white": w_value, "cool_white": w2_value})
-        return msg, updates
+        return msgs, updates
 
     def _set_transition_complete_time(self) -> None:
         """Set the time we expect the transition will be completed.

@@ -381,7 +381,7 @@ class LEDENETDevice:
             # Currently this is only the SK6812RGBW strips on 0xA3
             and self._device_config.operating_mode == COLOR_MODE_RGBW
         ):
-            return COLOR_MODE_RGBW
+            return {COLOR_MODE_RGBW}
         if not is_known_model(self.model_num):
             # Default mode is RGB
             return BASE_MODE_MAP.get(self.raw_state.mode & 0x0F, {DEFAULT_MODE})

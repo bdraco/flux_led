@@ -378,6 +378,7 @@ class LEDENETDevice:
         assert self.raw_state is not None
         if (
             self._device_config is not None
+            # Currently this is only the SK6812RGBW strips on 0xA3
             and self._device_config.operating_mode == COLOR_MODE_RGBW
         ):
             return COLOR_MODES_RGB_W

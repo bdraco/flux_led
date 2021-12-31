@@ -715,7 +715,11 @@ class ProtocolLEDENETOriginal(ProtocolBase):
         #  |  |  green
         #  |  red
         #  head
-        return [self.construct_message(bytearray([0x56, red or 0x00, green or 0x00, blue or 0x00, 0xAA]))]
+        return [
+            self.construct_message(
+                bytearray([0x56, red or 0x00, green or 0x00, blue or 0x00, 0xAA])
+            )
+        ]
 
     def construct_message(self, raw_bytes: bytearray) -> bytearray:
         """Original protocol uses no checksum."""
@@ -753,7 +757,9 @@ class ProtocolLEDENETOriginalCCT(ProtocolLEDENETOriginal):
         #  |  |  green
         #  |  red
         #  head
-        return [self.construct_message(bytearray([0x56, red or 0x00, green or 0x00, 0xAA]))]
+        return [
+            self.construct_message(bytearray([0x56, red or 0x00, green or 0x00, 0xAA]))
+        ]
 
 
 class ProtocolLEDENET8Byte(ProtocolBase):
@@ -1359,24 +1365,26 @@ class ProtocolLEDENETAddressableA2(ProtocolLEDENETAddressableBase):
         preset_number = 0x01  # aka fixed color
         msgs = []
         if red is not None or green is not None or blue is not None:
-            msgs.append(self.construct_message(
-                bytearray(
-                    [
-                        0x41,
-                        preset_number,
-                        red or 0x00,
-                        green or 0x00,
-                        blue or 0x00,
-                        0x00,
-                        0x00,
-                        0x00,
-                        0x60,
-                        0xFF,
-                        0x00,
-                        0x00,
-                    ]
+            msgs.append(
+                self.construct_message(
+                    bytearray(
+                        [
+                            0x41,
+                            preset_number,
+                            red or 0x00,
+                            green or 0x00,
+                            blue or 0x00,
+                            0x00,
+                            0x00,
+                            0x00,
+                            0x60,
+                            0xFF,
+                            0x00,
+                            0x00,
+                        ]
+                    )
                 )
-            ))
+            )
         if warm_white is not None:
             msgs.append(self.construct_message(bytearray([0x47, warm_white or 0x00])))
         return msgs

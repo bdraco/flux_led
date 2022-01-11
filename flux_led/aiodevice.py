@@ -1,9 +1,11 @@
 import asyncio
+from asyncio.queues import QueueEmpty
 import contextlib
 from datetime import datetime
 import logging
 import time
 from typing import Callable, Coroutine, Dict, List, Optional, Tuple
+from collections import deque
 
 from .aioprotocol import AIOLEDENETProtocol
 from .aioscanner import AIOBulbScanner
@@ -46,6 +48,7 @@ from .utils import color_temp_to_white_levels, rgbw_brightness, rgbww_brightness
 _LOGGER = logging.getLogger(__name__)
 
 
+LEVELS_COMMAND_SPACING_DELAY = 0.5
 COMMAND_SPACING_DELAY = 1
 MAX_UPDATES_WITHOUT_RESPONSE = 4
 DEVICE_CONFIG_WAIT_SECONDS = (
@@ -80,6 +83,8 @@ class AIOWifiLedBulb(LEDENETDevice):
         """Init and setup the bulb."""
         super().__init__(ipaddr, port, timeout, discovery)
         self._connect_lock = asyncio.Lock()
+        self._levels_queue = asyncio.Queue()
+        self._levels_queue_task: Optional[asyncio.Task] = None
         self._aio_protocol: Optional[AIOLEDENETProtocol] = None
         self._get_time_lock: asyncio.Lock = asyncio.Lock()
         self._get_time_future: Optional[asyncio.Future[bool]] = None
@@ -165,14 +170,17 @@ class AIOWifiLedBulb(LEDENETDevice):
 
     async def async_stop(self) -> None:
         """Shutdown the connection."""
+        self._last_update_time = NEVER_TIME
         self._async_stop()
 
     def _async_stop(self) -> None:
         """Shutdown the connection and mark unavailable."""
-        self.set_unavailable()
         if self._aio_protocol:
             self._aio_protocol.close()
-        self._last_update_time = NEVER_TIME
+        if self._levels_queue_task:
+            self._levels_queue_task.cancel()
+            self._levels_queue_task = None
+        self.set_unavailable()
 
     async def _async_send_state_query(self) -> None:
         assert self._protocol is not None
@@ -289,9 +297,7 @@ class AIOWifiLedBulb(LEDENETDevice):
                 return
         self._last_update_time = now
         if self._updates_without_response == MAX_UPDATES_WITHOUT_RESPONSE:
-            if self._aio_protocol:
-                self._aio_protocol.close()
-            self.set_unavailable()
+            self._async_stop()
             self._updates_without_response = 0
             raise RuntimeError("Bulb stopped responding")
         await self._async_send_state_query()
@@ -332,12 +338,42 @@ class AIOWifiLedBulb(LEDENETDevice):
     ) -> None:
         """Process and send a levels change."""
         self._set_transition_complete_time()
-        for idx, msg in enumerate(msgs):
-            await self._async_send_msg(msg)
-            if idx > 0:
-                await asyncio.sleep(COMMAND_SPACING_DELAY)
+        if len(msgs) == 1:
+            await self._async_send_msg(msgs[0])
+        else:
+            # If we have to sleep we still want to return right away
+            self._empty_levels_queue()
+            for msg in msgs:
+                self._levels_queue.put_nowait(msg)
+            if not self._levels_queue_task:
+                self._levels_queue_task = asyncio.create_task(
+                    self._start_levels_queue()
+                )
         if updates:
             self._replace_raw_state(updates)
+
+    def _empty_levels_queue(self):
+        """Empty out the levels queue."""
+        while self._levels_queue.qsize:
+            try:
+                self._levels_queue.get_nowait()
+                self._levels_queue.task_done()
+            except QueueEmpty:
+                return
+
+    async def _start_levels_queue(self):
+        """Send messages for a levels change."""
+        # Ensure we never send a levels change and
+        # a white change at the same time to avoid
+        # triggering a bug in some of devices where
+        # it will be stuck in an in-between state
+        # since multiple transitions are happening
+        # at the same time.
+        while True:
+            msg = await self._levels_queue.get()
+            self._set_transition_complete_time()
+            await self._async_send_msg(msg)
+            await asyncio.sleep(LEVELS_COMMAND_SPACING_DELAY)
 
     async def async_set_preset_pattern(
         self, effect: int, speed: int, brightness: int = 100
@@ -611,7 +647,7 @@ class AIOWifiLedBulb(LEDENETDevice):
     def _async_connection_lost(self, exc: Optional[Exception]) -> None:
         """Called when the connection is lost."""
         self._aio_protocol = None
-        self.set_unavailable()
+        self._async_stop()
 
     def _async_data_recieved(self, data: bytes) -> None:
         """New data on the socket."""

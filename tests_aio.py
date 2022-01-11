@@ -823,8 +823,11 @@ async def test_SK6812RGBW(mock_aio_protocol, caplog: pytest.LogCaptureFixture):
     assert light.color_modes == {COLOR_MODE_RGBW}
     transport.reset_mock()
 
-    with patch.object(aiodevice, "COMMAND_SPACING_DELAY", 0):
+    with patch.object(aiodevice, "LEVELS_COMMAND_SPACING_DELAY", 0):
         await light.async_set_levels(r=255, g=255, b=255, w=255)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
         assert transport.mock_calls == [
             call.write(
                 bytearray(
@@ -853,6 +856,25 @@ async def test_SK6812RGBW(mock_aio_protocol, caplog: pytest.LogCaptureFixture):
         b"\x81\xA3\x23\x61\x01\x32\x40\x40\x40\xB1\x01\x00\x90\xDD"
     )
     assert light.raw_state.warm_white == 125
+    transport.reset_mock()
+
+    with patch.object(aiodevice, "LEVELS_COMMAND_SPACING_DELAY", 0):
+        await light.async_set_levels(r=0, g=255, b=255, w=255)
+        await light.async_set_levels(r=255, g=0, b=255, w=255)
+        await light.async_set_levels(r=255, g=255, b=0, w=255)
+        await light.async_set_levels(r=255, g=255, b=255, w=255)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert transport.mock_calls == [
+            call.write(
+                bytearray(
+                    b"\xb0\xb1\xb2\xb3\x00\x01\x01\n\x00\rA\x01\xff\xff\xff\x00\x00\x00`\xff\x00\x00\x9e\x1b"
+                )
+            ),
+            call.write(bytearray(b"\xb0\xb1\xb2\xb3\x00\x01\x01\x0b\x00\x03G\xffFb")),
+        ]
+    await light.async_stop()
 
 
 @pytest.mark.asyncio

@@ -373,7 +373,7 @@ class AIOWifiLedBulb(LEDENETDevice):
             self._set_transition_complete_time()
             await self._async_send_msg(msg)
             if updates:
-                self._replace_raw_state(updates)            
+                self._replace_raw_state(updates)
             await asyncio.sleep(COMMAND_SPACING_DELAY)
 
     async def async_set_preset_pattern(

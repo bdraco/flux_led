@@ -48,7 +48,6 @@ from .utils import color_temp_to_white_levels, rgbw_brightness, rgbww_brightness
 _LOGGER = logging.getLogger(__name__)
 
 
-LEVELS_COMMAND_SPACING_DELAY = 0.5
 COMMAND_SPACING_DELAY = 1
 MAX_UPDATES_WITHOUT_RESPONSE = 4
 DEVICE_CONFIG_WAIT_SECONDS = (
@@ -373,7 +372,7 @@ class AIOWifiLedBulb(LEDENETDevice):
             msg = await self._levels_queue.get()
             self._set_transition_complete_time()
             await self._async_send_msg(msg)
-            await asyncio.sleep(LEVELS_COMMAND_SPACING_DELAY)
+            await asyncio.sleep(COMMAND_SPACING_DELAY)
 
     async def async_set_preset_pattern(
         self, effect: int, speed: int, brightness: int = 100

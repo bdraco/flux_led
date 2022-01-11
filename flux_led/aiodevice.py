@@ -343,7 +343,7 @@ class AIOWifiLedBulb(LEDENETDevice):
             # If we have to sleep we still want to return right away
             self._empty_levels_queue()
             for msg in msgs:
-                self._levels_queue.put_nowait(msg)
+                self._levels_queue.put_nowait((msg, updates))
             if not self._levels_queue_task:
                 self._levels_queue_task = asyncio.create_task(
                     self._start_levels_queue()
@@ -369,9 +369,11 @@ class AIOWifiLedBulb(LEDENETDevice):
         # since multiple transitions are happening
         # at the same time.
         while True:
-            msg = await self._levels_queue.get()
+            msg, updates = await self._levels_queue.get()
             self._set_transition_complete_time()
             await self._async_send_msg(msg)
+            if updates:
+                self._replace_raw_state(updates)            
             await asyncio.sleep(COMMAND_SPACING_DELAY)
 
     async def async_set_preset_pattern(
